@@ -1,5 +1,5 @@
 import { Bot, Context, SessionFlavor, session, webhookCallback } from "grammy";
-import { User, UserFromGetMe } from "grammy/types";
+import { Chat, MessageOriginHiddenUser, User, UserFromGetMe } from "grammy/types";
 
 
 export interface Env {
@@ -21,24 +21,41 @@ export default {
 
 
       bot.command("start", (ctx) => ctx.reply(
-        "Hello! Forward me a message, and I'll respond with that user info. Or just say something, and I'll send your own user info! I talk JSON so I'll just send you the raw user object."
+        "Hello! Forward me a message, and I'll respond with that user or channel info. Or just say something, and I'll send your own user info! I talk JSON so I'll just send you the raw object.\n\n" +
+        "I'm open source:\nhttps://github.com/nelsonjchen/userinfofwdbot"
       ));
 
       bot.on("message", async (ctx) => {
         // Default to the user who sent the message
-        let user: User = ctx.from;
+        let source: User | Chat | {
+          username: string;
+          _note: string;
+        } = ctx.from;
         // If the message was forwarded, use the original sender of the message
         if (ctx.message.forward_origin) {
           const forward_origin = ctx.message.forward_origin;
+          if (forward_origin.type === "hidden_user") {
+            source = {
+              username: forward_origin.sender_user_name,
+              _note: "This user has turned on forward privacy. I can't see their user ID. Use Telegram Web to try to \"directly message\" them and the user ID will be in the URL. No need to actually send a message."
+            }
+          }
           if (forward_origin.type === "user") {
-            user = forward_origin.sender_user;
+            source = forward_origin.sender_user;
+          }
+          if (forward_origin.type === "channel") {
+            source = forward_origin.chat
           }
         }
-        await ctx.reply(JSON.stringify(user, null, 2),
+        await ctx.reply(
+          `<code>
+${JSON.stringify(source, null, 2)}
+</code>`,
           {
             reply_parameters: {
               message_id: ctx.message.message_id,
-            }
+            },
+            parse_mode: "HTML"
           }
         );
 			});

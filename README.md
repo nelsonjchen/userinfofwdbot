@@ -6,4 +6,6 @@ Inspired by https://github.com/nadam/userinfobot/blob/master/src/main/java/se/an
 
 It improves on the original by displaying the user's ID from more forwarded sources of messages, such as group chats in addition to channels. Other than that, it's not much different.
 
+It also has some guidance for users who have hidden their forwarded messages. Not great, but you won't be lost!
+
 The bot is written for [Cloudflare Workers](https://workers.cloudflare.com).
